@@ -2,23 +2,30 @@ import { useReveal } from "@/hooks/use-reveal"
 import { useState, type FormEvent } from "react"
 import { MagneticButton } from "@/components/magnetic-button"
 import Icon from "@/components/ui/icon"
+import { api } from "@/lib/api"
+import { useKzcStore } from "@/lib/store"
 
-export function RegisterSection() {
+export function RegisterSection({ onOpenDashboard }: { onOpenDashboard?: () => void } = {}) {
   const { ref, isVisible } = useReveal(0.3)
   const [formData, setFormData] = useState({ username: "", email: "", password: "", promo: "" })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
-  const [balance] = useState(500)
+  const [error, setError] = useState("")
+  const { setUser, setToken, user } = useKzcStore()
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!formData.username || !formData.email || !formData.password) return
     setIsSubmitting(true)
-    await new Promise((resolve) => setTimeout(resolve, 1200))
+    setError("")
+    const res = await api.register(formData)
     setIsSubmitting(false)
+    if (res.error) { setError(res.error); return }
+    setToken(res.token)
+    setUser(res.user)
     setSubmitSuccess(true)
     setFormData({ username: "", email: "", password: "", promo: "" })
-    setTimeout(() => setSubmitSuccess(false), 6000)
+    setTimeout(() => { setSubmitSuccess(false); onOpenDashboard?.() }, 2000)
   }
 
   const fields = [
@@ -60,7 +67,7 @@ export function RegisterSection() {
                   <span className="text-2xl">₭</span>
                   <div>
                     <p className="font-mono text-xs text-yellow-400/70">Стартовый бонус</p>
-                    <p className="text-2xl font-light text-yellow-300">{balance} KAZAHCOIN</p>
+                    <p className="text-2xl font-light text-yellow-300">{user?.balance ?? 500} KAZAHCOIN</p>
                   </div>
                 </div>
               </div>
@@ -127,6 +134,7 @@ export function RegisterSection() {
                   }`}
                   style={{ transitionDelay: "600ms" }}
                 >
+                  {error && <p className="mb-2 font-mono text-xs text-red-400">{error}</p>}
                   <MagneticButton
                     variant="primary"
                     size="lg"

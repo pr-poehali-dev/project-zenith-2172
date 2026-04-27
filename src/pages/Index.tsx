@@ -6,12 +6,28 @@ import { BonusSection } from "@/components/sections/services-section"
 import { AboutSection } from "@/components/sections/about-section"
 import { RegisterSection } from "@/components/sections/contact-section"
 import { MagneticButton } from "@/components/magnetic-button"
+import AuthModal from "@/components/casino/AuthModal"
+import Dashboard from "@/components/casino/Dashboard"
+import { useKzcStore } from "@/lib/store"
 import { useRef, useEffect, useState } from "react"
 
 export default function Index() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [currentSection, setCurrentSection] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [showAuth, setShowAuth] = useState(false)
+  const [showDashboard, setShowDashboard] = useState(false)
+  const { user, token, setUser } = useKzcStore()
+
+  useEffect(() => {
+    if (token && !user) {
+      import("@/lib/api").then(({ api }) => {
+        api.me().then((res) => {
+          if (res.id) setUser(res)
+        })
+      })
+    }
+  }, [token, user, setUser])
   const touchStartY = useRef(0)
   const touchStartX = useRef(0)
   const shaderContainerRef = useRef<HTMLDivElement>(null)
@@ -244,10 +260,19 @@ export default function Index() {
           ))}
         </div>
 
-        <MagneticButton variant="secondary" onClick={() => scrollToSection(4)}>
-          Играть
-        </MagneticButton>
+        {user ? (
+          <MagneticButton variant="secondary" onClick={() => setShowDashboard(true)}>
+            ₭ {user.balance.toLocaleString()}
+          </MagneticButton>
+        ) : (
+          <MagneticButton variant="secondary" onClick={() => setShowAuth(true)}>
+            Играть
+          </MagneticButton>
+        )}
       </nav>
+
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showDashboard && user && <Dashboard onClose={() => setShowDashboard(false)} />}
 
       <div
         ref={scrollContainerRef}
@@ -279,9 +304,9 @@ export default function Index() {
               <MagneticButton
                 size="lg"
                 variant="primary"
-                onClick={() => scrollToSection(4)}
+                onClick={() => user ? setShowDashboard(true) : setShowAuth(true)}
               >
-                Получить бонус
+                {user ? `₭ ${user.balance.toLocaleString()} — Играть` : "Получить бонус"}
               </MagneticButton>
               <MagneticButton size="lg" variant="secondary" onClick={() => scrollToSection(1)}>
                 Смотреть игры
@@ -302,7 +327,7 @@ export default function Index() {
         <GamesSection />
         <BonusSection />
         <AboutSection scrollToSection={scrollToSection} />
-        <RegisterSection />
+        <RegisterSection onOpenDashboard={() => setShowDashboard(true)} />
       </div>
 
       <style>{`

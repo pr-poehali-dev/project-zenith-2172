@@ -1,0 +1,56 @@
+CREATE TABLE IF NOT EXISTS kzc_users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  balance INTEGER NOT NULL DEFAULT 500,
+  vip_level INTEGER NOT NULL DEFAULT 1,
+  referral_code VARCHAR(20) UNIQUE NOT NULL,
+  referred_by INTEGER,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS kzc_sessions (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  token VARCHAR(128) UNIQUE NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  expires_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS kzc_transactions (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  type VARCHAR(30) NOT NULL,
+  amount INTEGER NOT NULL,
+  description VARCHAR(255),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS kzc_game_history (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  game VARCHAR(50) NOT NULL,
+  bet INTEGER NOT NULL,
+  result INTEGER NOT NULL,
+  won BOOLEAN NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS kzc_promo_codes (
+  id SERIAL PRIMARY KEY,
+  code VARCHAR(50) UNIQUE NOT NULL,
+  reward INTEGER NOT NULL,
+  max_uses INTEGER NOT NULL DEFAULT 100,
+  used_count INTEGER NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS kzc_promo_uses (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  promo_id INTEGER NOT NULL,
+  used_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(user_id, promo_id)
+);

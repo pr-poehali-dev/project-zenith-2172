@@ -1,0 +1,12 @@
+{
+  "tests": [
+    {
+      "name": "Play without token returns 401",
+      "method": "POST",
+      "path": "/",
+      "body": {"game": "dice", "bet": 10},
+      "expectedStatus": 401,
+      "bodyMatcher": "partial"
+    }
+  ]
+}
